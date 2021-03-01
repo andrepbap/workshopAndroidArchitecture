@@ -1,8 +1,5 @@
 package br.com.andrepbap.estudoarquiteturaandroid.repository;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-
 import com.google.gson.Gson;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +18,11 @@ public class Repository<T> {
     private final OkHttpClient okHttpClient;
     private final static String API_URL = "https://pokeapi.co/api/v2/";
 
-    private final MutableLiveData<Resource<T>> liveData = new MutableLiveData<>();
-
     public Repository() {
         okHttpClient = OkHttpClientProvider.getInstance().getOkHttpClient();
     }
 
-    public LiveData<Resource<T>> get(String path, Class<T> clazz) {
+    public void get(String path, Class<T> clazz, Callback<T> callback) {
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse(API_URL + path).newBuilder();
         String url = urlBuilder.build().toString();
@@ -36,33 +31,26 @@ public class Repository<T> {
                 .url(url)
                 .build();
 
-        final Resource<T> resource = new Resource<>();
-
-        if (liveData.getValue() != null && liveData.getValue().data != null) {
-            resource.data = liveData.getValue().data;
-        }
-
         okHttpClient.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                resource.error = e.getMessage();
-                liveData.postValue(resource);
+                callback.error(e.getMessage());
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    resource.error = response.message();
-                    liveData.postValue(resource);
+                    callback.error(response.message());
                     return;
                 }
 
-                resource.data = new Gson().fromJson(response.body().string(), clazz);
-
-                liveData.postValue(resource);
+                callback.success(new Gson().fromJson(response.body().string(), clazz));
             }
         });
+    }
 
-        return liveData;
+    public interface Callback<T> {
+        void success(T object);
+        void error(String error);
     }
 }
