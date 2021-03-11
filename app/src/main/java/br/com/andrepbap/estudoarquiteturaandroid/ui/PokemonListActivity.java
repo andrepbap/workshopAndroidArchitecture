@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import br.com.andrepbap.estudoarquiteturaandroid.repository.Repository;
 public class PokemonListActivity extends AppCompatActivity {
 
     private RecyclerAdapter adapter;
+    private final Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +37,7 @@ public class PokemonListActivity extends AppCompatActivity {
         new Repository<PokemonListModel>().get("pokemon", PokemonListModel.class, new Repository.Callback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel pokemonListModel) {
-                adapter.update(pokemonListModel.getResults());
+                handler.post((Runnable) () -> adapter.update(pokemonListModel.getResults()));
             }
 
             @Override
