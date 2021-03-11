@@ -22,6 +22,7 @@ public class Repository<T> {
     private final static String API_URL = "https://pokeapi.co/api/v2/";
 
     private final MutableLiveData<Resource<T>> liveData = new MutableLiveData<>();
+    final Resource<T> resource = new Resource<>();
 
     public Repository() {
         okHttpClient = OkHttpClientProvider.getInstance().getOkHttpClient();
@@ -36,11 +37,7 @@ public class Repository<T> {
                 .url(url)
                 .build();
 
-        final Resource<T> resource = new Resource<>();
-
-        if (liveData.getValue() != null && liveData.getValue().data != null) {
-            resource.data = liveData.getValue().data;
-        }
+        updateResourceWithLastDataValue();
 
         okHttpClient.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
@@ -64,5 +61,17 @@ public class Repository<T> {
         });
 
         return liveData;
+    }
+
+    private void updateResourceWithLastDataValue() {
+        if (resourceHaveData()) {
+            resource.data = liveData.getValue().data;
+        }
+
+        resource.error = null;
+    }
+
+    private boolean resourceHaveData() {
+        return liveData.getValue() != null && liveData.getValue().data != null;
     }
 }
