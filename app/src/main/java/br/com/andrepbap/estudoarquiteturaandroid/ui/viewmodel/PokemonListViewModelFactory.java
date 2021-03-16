@@ -4,14 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
-import br.com.andrepbap.estudoarquiteturaandroid.repository.Repository;
+import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 
 public class PokemonListViewModelFactory implements ViewModelProvider.Factory {
 
-    private Repository<PokemonListModel> repository;
+    private final PokemonRepository repository;
 
-    public PokemonListViewModelFactory(Repository<PokemonListModel> repository) {
+    public PokemonListViewModelFactory(PokemonRepository repository) {
         this.repository = repository;
     }
 
