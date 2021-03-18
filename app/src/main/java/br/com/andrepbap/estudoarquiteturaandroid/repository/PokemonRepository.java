@@ -4,7 +4,7 @@ import android.content.Context;
 
 import java.util.List;
 
-import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabaseInstanceProvider;
+import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
 import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
@@ -19,8 +19,7 @@ public class PokemonRepository {
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
-        pokemonDAO = AppDatabaseInstanceProvider.getInstance(context)
-                .getDatabase()
+        pokemonDAO = AppDatabase.getInstance(context)
                 .pokemonDAO();
     }
 
