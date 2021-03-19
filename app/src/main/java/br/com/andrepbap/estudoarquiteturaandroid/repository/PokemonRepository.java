@@ -39,11 +39,6 @@ public class PokemonRepository {
             if (resource.error != null && mediator.getValue() != null) {
                 mediator.postValue(new Resource<>(mediator.getValue().data, resource.error));
             }
-
-            if(resource.data != null) {
-                updateLocalDatabase(resource.data);
-                mediator.postValue(resource);
-            }
         });
 
         return mediator;
@@ -59,7 +54,7 @@ public class PokemonRepository {
         webClient.get(GET_ALL_PATH, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
-                liveData.postValue(new Resource<>(result));
+                updateLocalDatabase(result);
             }
 
             @Override
