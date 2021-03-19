@@ -11,7 +11,8 @@ import java.util.ArrayList;
 
 import br.com.andrepbap.estudoarquiteturaandroid.R;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
-import br.com.andrepbap.estudoarquiteturaandroid.repository.Repository;
+import br.com.andrepbap.estudoarquiteturaandroid.repository.BaseCallback;
+import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 
 public class PokemonListActivity extends AppCompatActivity {
 
@@ -34,7 +35,7 @@ public class PokemonListActivity extends AppCompatActivity {
     }
 
     private void getModel() {
-        new Repository<PokemonListModel>().get("pokemon", PokemonListModel.class, new Repository.Callback<PokemonListModel>() {
+        new PokemonRepository(this).getPokemonList(new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel pokemonListModel) {
                 handler.post((Runnable) () -> adapter.update(pokemonListModel.getResults()));
