@@ -17,4 +17,8 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
     public LiveData<Resource<PokemonListModel>> getPokemonList() {
         return repository.getPokemonList();
     }
+
+    public void paginate() {
+        repository.paginate();
+    }
 }

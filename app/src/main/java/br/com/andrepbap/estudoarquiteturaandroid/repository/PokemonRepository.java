@@ -15,12 +15,14 @@ import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
-    public static final String GET_ALL_PATH = "pokemon";
+    public static final String GET_ALL_URL = "https://pokeapi.co/api/v2/pokemon";
+    public String nextPage;
 
     private final PokemonDAO pokemonDAO;
     private final WebClient<PokemonListModel> webClient;
 
     private final MediatorLiveData<Resource<PokemonListModel>> mediator = new MediatorLiveData<>();
+    private final MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
@@ -35,35 +37,38 @@ public class PokemonRepository {
             mediator.postValue(new Resource<>(pokemonListModel));
         });
 
-        mediator.addSource(getFromWebClient(), resource -> {
+        mediator.addSource(webClientLiveData, resource -> {
             if (resource.error != null && mediator.getValue() != null) {
                 mediator.postValue(new Resource<>(mediator.getValue().data, resource.error));
             }
         });
 
+        getFromWebClient(GET_ALL_URL);
+
         return mediator;
+    }
+
+    public void paginate() {
+        getFromWebClient(nextPage);
     }
 
     private LiveData<List<PokemonModel>> getFromLocalDatabase() {
           return pokemonDAO.getAll();
     }
 
-    private LiveData<Resource<PokemonListModel>> getFromWebClient() {
-        MutableLiveData<Resource<PokemonListModel>> liveData = new MutableLiveData<>();
-
-        webClient.get(GET_ALL_PATH, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
+    private void getFromWebClient(String path) {
+        webClient.get(path, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
                 updateLocalDatabase(result);
+                nextPage = result.getNextPage();
             }
 
             @Override
             public void error(String error) {
-                liveData.postValue(new Resource<>(error));
+                webClientLiveData.postValue(new Resource<>(error));
             }
         });
-
-        return liveData;
     }
 
     private void updateLocalDatabase(PokemonListModel result) {

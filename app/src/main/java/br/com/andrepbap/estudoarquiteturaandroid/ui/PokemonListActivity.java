@@ -1,5 +1,6 @@
 package br.com.andrepbap.estudoarquiteturaandroid.ui;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,6 +38,15 @@ public class PokemonListActivity extends AppCompatActivity {
         adapter = new RecyclerAdapter(new ArrayList<>());
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
+                    pokemonListViewModel.paginate();
+                }
+            }
+        });
     }
 
     private void getModel() {
