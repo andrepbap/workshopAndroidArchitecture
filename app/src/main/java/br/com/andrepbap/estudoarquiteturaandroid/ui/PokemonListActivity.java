@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
@@ -19,6 +22,8 @@ public class PokemonListActivity extends AppCompatActivity {
 
     private PokemonListViewModel pokemonListViewModel;
     private RecyclerAdapter adapter;
+    private FloatingActionButton goToTopActionButton;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,23 +35,41 @@ public class PokemonListActivity extends AppCompatActivity {
         pokemonListViewModel = viewModelProvider.get(PokemonListViewModel.class);
 
         setupRecyclerView();
+        setupGoToTopButton();
         getModel();
     }
 
     private void setupRecyclerView() {
-        RecyclerView recyclerView = findViewById(R.id.main_recycler_view);
+        recyclerView = findViewById(R.id.main_recycler_view);
+
         adapter = new RecyclerAdapter(new ArrayList<>());
+
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
+
+        pokemonListViewModel.scrollHandler(recyclerView).observe(this, isScrollingDown -> {
+            if (isScrollingDown) {
+                goToTopActionButton.setVisibility(View.VISIBLE);
+            } else {
+                goToTopActionButton.setVisibility(View.GONE);
+            }
+        });
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                if(!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
+                if (!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
                     pokemonListViewModel.paginate();
                 }
             }
         });
+    }
+
+    private void setupGoToTopButton() {
+        goToTopActionButton = findViewById(R.id.go_to_top_floating_action_button);
+        goToTopActionButton.setVisibility(View.GONE);
+        //goToTopActionButton.setOnClickListener(view -> );
     }
 
     private void getModel() {

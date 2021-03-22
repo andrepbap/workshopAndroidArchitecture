@@ -22,7 +22,6 @@ public class PokemonRepository {
     private final WebClient<PokemonListModel> webClient;
 
     private final MediatorLiveData<Resource<PokemonListModel>> mediator = new MediatorLiveData<>();
-    private final MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
@@ -37,13 +36,11 @@ public class PokemonRepository {
             mediator.postValue(new Resource<>(pokemonListModel));
         });
 
-        mediator.addSource(webClientLiveData, resource -> {
+        mediator.addSource(getFromWebClient(GET_ALL_URL), resource -> {
             if (resource.error != null && mediator.getValue() != null) {
                 mediator.postValue(new Resource<>(mediator.getValue().data, resource.error));
             }
         });
-
-        getFromWebClient(GET_ALL_URL);
 
         return mediator;
     }
@@ -56,7 +53,9 @@ public class PokemonRepository {
           return pokemonDAO.getAll();
     }
 
-    private void getFromWebClient(String path) {
+    private LiveData<Resource<PokemonListModel>> getFromWebClient(String path) {
+        MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
+
         webClient.get(path, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
@@ -69,6 +68,8 @@ public class PokemonRepository {
                 webClientLiveData.postValue(new Resource<>(error));
             }
         });
+
+        return webClientLiveData;
     }
 
     private void updateLocalDatabase(PokemonListModel result) {
