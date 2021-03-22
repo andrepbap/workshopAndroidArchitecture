@@ -9,13 +9,13 @@ import java.util.List;
 
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 
-import static androidx.room.OnConflictStrategy.REPLACE;
+import static androidx.room.OnConflictStrategy.IGNORE;
 
 @Dao
 public interface PokemonDAO {
     @Query("SELECT * FROM PokemonModel")
     LiveData<List<PokemonModel>> getAll();
 
-    @Insert(onConflict = REPLACE)
+    @Insert(onConflict = IGNORE)
     void insertAll(PokemonModel... pokemonList);
 }
