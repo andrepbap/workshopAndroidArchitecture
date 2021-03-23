@@ -1,6 +1,7 @@
 package br.com.andrepbap.estudoarquiteturaandroid.repository;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -12,33 +13,40 @@ import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
 import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
+import br.com.andrepbap.estudoarquiteturaandroid.preferences.PokemonListPreferences;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
     public static final String GET_ALL_URL = "https://pokeapi.co/api/v2/pokemon";
-    public String nextPage;
 
     private final PokemonDAO pokemonDAO;
     private final WebClient<PokemonListModel> webClient;
 
-    private MediatorLiveData<Resource<PokemonListModel>> mediator;
+    private MediatorLiveData<Resource<PokemonListState>> mediator;
     private final MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
+    private final PokemonListPreferences pokemonListPreferences;
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
         pokemonDAO = AppDatabase.getInstance(context)
                 .pokemonDAO();
+        pokemonListPreferences = new PokemonListPreferences(context);
 
         setupPokemonListMediator();
     }
 
-    public LiveData<Resource<PokemonListModel>> getPokemonList() {
+    public LiveData<Resource<PokemonListState>> getPokemonList() {
         return mediator;
     }
 
     public void paginate() {
-        getFromWebClient(nextPage);
+        getFromWebClient(pokemonListPreferences.getNextPageLink());
+    }
+
+    public void updateListPositionStateWith(int position) {
+        pokemonListPreferences.setLastSeemPosition(position);
     }
 
     public void resetList() {
@@ -60,7 +68,8 @@ public class PokemonRepository {
 
         mediator.addSource(getFromLocalDatabase(), pokemonModelArray -> {
             PokemonListModel pokemonListModel = new PokemonListModel(pokemonModelArray);
-            mediator.postValue(new Resource<>(pokemonListModel));
+            PokemonListState pokemonListState = new PokemonListState(pokemonListModel, pokemonListPreferences.getLastSeemPosition());
+            mediator.postValue(new Resource<>(pokemonListState));
         });
 
         mediator.addSource(webClientLiveData, resource -> {
@@ -82,7 +91,7 @@ public class PokemonRepository {
             @Override
             public void success(PokemonListModel result) {
                 updateLocalDatabase(result);
-                nextPage = result.getNextPage();
+                updateNextPageLink(result);
             }
 
             @Override
@@ -94,5 +103,14 @@ public class PokemonRepository {
 
     private void updateLocalDatabase(PokemonListModel result) {
         pokemonDAO.insertAll(result.getResultsAsArray());
+    }
+
+    private void updateNextPageLink(PokemonListModel result) {
+        String savedNextPageLinkOffset = Uri.parse(pokemonListPreferences.getNextPageLink()).getQueryParameter("offset");
+        String nextPageLinkOffset = Uri.parse(result.getNextPage()).getQueryParameter("offset");
+
+        if (Integer.parseInt(nextPageLinkOffset) > Integer.parseInt(savedNextPageLinkOffset)) {
+            pokemonListPreferences.setNextPageLink(result.getNextPage());
+        }
     }
 }
