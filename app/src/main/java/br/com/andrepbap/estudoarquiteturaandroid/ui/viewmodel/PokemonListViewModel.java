@@ -22,6 +22,18 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
         return repository.getPokemonList();
     }
 
+    public void createPaginationHandler(RecyclerView recyclerView) {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
+                    repository.paginate();
+                }
+            }
+        });
+    }
+
     public LiveData<Boolean> scrollHandler(RecyclerView recyclerView) {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -34,10 +46,6 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
         });
 
         return scrollingDownLiveData;
-    }
-
-    public void paginate() {
-        repository.paginate();
     }
 
     public void resetList() {

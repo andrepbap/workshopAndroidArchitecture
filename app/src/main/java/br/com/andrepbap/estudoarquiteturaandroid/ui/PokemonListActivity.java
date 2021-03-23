@@ -1,6 +1,5 @@
 package br.com.andrepbap.estudoarquiteturaandroid.ui;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,7 +34,7 @@ public class PokemonListActivity extends AppCompatActivity {
 
         setupRecyclerView();
         setupGoToTopButton();
-        getModel();
+        observePokemonList();
     }
 
     private void setupRecyclerView() {
@@ -54,15 +53,7 @@ public class PokemonListActivity extends AppCompatActivity {
             }
         });
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                if (!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
-                    pokemonListViewModel.paginate();
-                }
-            }
-        });
+        pokemonListViewModel.createPaginationHandler(recyclerView);
     }
 
     private void setupGoToTopButton() {
@@ -71,7 +62,7 @@ public class PokemonListActivity extends AppCompatActivity {
         goToTopActionButton.setOnClickListener(view -> pokemonListViewModel.resetList());
     }
 
-    private void getModel() {
+    private void observePokemonList() {
         pokemonListViewModel.getPokemonList().observe(this, resource -> {
             if (resource.data != null) {
                 adapter.update(resource.data.getResults());
