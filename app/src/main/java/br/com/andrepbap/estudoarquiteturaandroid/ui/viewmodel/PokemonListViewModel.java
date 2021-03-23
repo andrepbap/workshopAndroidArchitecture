@@ -27,7 +27,9 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                scrollingDownLiveData.postValue(dy >= 0);
+                if (dy != 0) {
+                    scrollingDownLiveData.postValue(dy > 0);
+                }
             }
         });
 
@@ -36,5 +38,10 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
 
     public void paginate() {
         repository.paginate();
+    }
+
+    public void resetList() {
+        scrollingDownLiveData.postValue(false);
+        repository.resetList();
     }
 }

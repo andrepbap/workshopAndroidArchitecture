@@ -23,7 +23,6 @@ public class PokemonListActivity extends AppCompatActivity {
     private PokemonListViewModel pokemonListViewModel;
     private RecyclerAdapter adapter;
     private FloatingActionButton goToTopActionButton;
-    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +39,7 @@ public class PokemonListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        recyclerView = findViewById(R.id.main_recycler_view);
+        RecyclerView recyclerView = findViewById(R.id.main_recycler_view);
 
         adapter = new RecyclerAdapter(new ArrayList<>());
 
@@ -69,7 +68,7 @@ public class PokemonListActivity extends AppCompatActivity {
     private void setupGoToTopButton() {
         goToTopActionButton = findViewById(R.id.go_to_top_floating_action_button);
         goToTopActionButton.setVisibility(View.GONE);
-        //goToTopActionButton.setOnClickListener(view -> );
+        goToTopActionButton.setOnClickListener(view -> pokemonListViewModel.resetList());
     }
 
     private void getModel() {

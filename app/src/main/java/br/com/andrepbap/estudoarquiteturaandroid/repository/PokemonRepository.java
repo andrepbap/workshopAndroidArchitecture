@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import java.util.List;
 
 import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
+import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
@@ -21,27 +22,18 @@ public class PokemonRepository {
     private final PokemonDAO pokemonDAO;
     private final WebClient<PokemonListModel> webClient;
 
-    private final MediatorLiveData<Resource<PokemonListModel>> mediator = new MediatorLiveData<>();
+    private MediatorLiveData<Resource<PokemonListModel>> mediator;
+    private final MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
         pokemonDAO = AppDatabase.getInstance(context)
                 .pokemonDAO();
+
+        setupPokemonListMediator();
     }
 
     public LiveData<Resource<PokemonListModel>> getPokemonList() {
-
-        mediator.addSource(getFromLocalDatabase(), pokemonModelArray -> {
-            PokemonListModel pokemonListModel = new PokemonListModel(pokemonModelArray);
-            mediator.postValue(new Resource<>(pokemonListModel));
-        });
-
-        mediator.addSource(getFromWebClient(GET_ALL_URL), resource -> {
-            if (resource.error != null && mediator.getValue() != null) {
-                mediator.postValue(new Resource<>(mediator.getValue().data, resource.error));
-            }
-        });
-
         return mediator;
     }
 
@@ -49,12 +41,42 @@ public class PokemonRepository {
         getFromWebClient(nextPage);
     }
 
+    public void resetList() {
+        new BaseAsyncTask<>(new BaseAsyncTask.BaseAsyncTaskDelegate<Integer>() {
+            @Override
+            public Integer onAsyncTaskInBackground() {
+                return pokemonDAO.nukeTable();
+            }
+
+            @Override
+            public void onAsyncTaskFinish(Integer result) {
+                getFromWebClient(GET_ALL_URL);
+            }
+        }).execute();
+    }
+
+    private void setupPokemonListMediator() {
+        mediator = new MediatorLiveData<>();
+
+        mediator.addSource(getFromLocalDatabase(), pokemonModelArray -> {
+            PokemonListModel pokemonListModel = new PokemonListModel(pokemonModelArray);
+            mediator.postValue(new Resource<>(pokemonListModel));
+        });
+
+        mediator.addSource(webClientLiveData, resource -> {
+            if (resource.error != null && mediator.getValue() != null) {
+                mediator.postValue(new Resource<>(mediator.getValue().data, resource.error));
+            }
+        });
+
+        getFromWebClient(GET_ALL_URL);
+    }
+
     private LiveData<List<PokemonModel>> getFromLocalDatabase() {
           return pokemonDAO.getAll();
     }
 
-    private LiveData<Resource<PokemonListModel>> getFromWebClient(String path) {
-        MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
+    private void getFromWebClient(String path) {
 
         webClient.get(path, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
@@ -68,8 +90,6 @@ public class PokemonRepository {
                 webClientLiveData.postValue(new Resource<>(error));
             }
         });
-
-        return webClientLiveData;
     }
 
     private void updateLocalDatabase(PokemonListModel result) {

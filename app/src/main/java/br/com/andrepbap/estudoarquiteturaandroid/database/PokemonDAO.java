@@ -18,4 +18,7 @@ public interface PokemonDAO {
 
     @Insert(onConflict = IGNORE)
     void insertAll(PokemonModel... pokemonList);
+
+    @Query("DELETE FROM PokemonModel")
+    int nukeTable();
 }
