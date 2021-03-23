@@ -15,19 +15,17 @@ import okhttp3.Response;
 
 public class WebClient<T> {
     private final OkHttpClient okHttpClient;
-    private final static String API_URL = "https://pokeapi.co/api/v2/";
 
     public WebClient() {
         okHttpClient = OkHttpClientInstanceProvider.getInstance().getOkHttpClient();
     }
 
-    public void get(String path, Class<T> clazz, BaseCallback<T> callback) {
+    public void get(String url, Class<T> clazz, BaseCallback<T> callback) {
 
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(API_URL + path).newBuilder();
-        String url = urlBuilder.build().toString();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
 
         Request request = new Request.Builder()
-                .url(url)
+                .url(urlBuilder.build().toString())
                 .build();
 
         okHttpClient.newCall(request).enqueue(new okhttp3.Callback() {
