@@ -6,15 +6,16 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListActivityModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 
-@Database(entities = {PokemonModel.class}, version = 1)
+@Database(entities = {PokemonModel.class, PokemonListActivityModel.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
 
     private final static String DATABASE_NAME = "pokemon.db";
     private static AppDatabase instance;
 
-    public abstract PokemonDAO pokemonDAO();
+    public abstract PokemonListActivityWithPokemonsDAO pokemonListActivityWithPokemonsDAO();
 
     public static AppDatabase getInstance(Context context) {
         if (instance == null) {

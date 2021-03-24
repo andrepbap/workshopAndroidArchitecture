@@ -13,11 +13,21 @@ public class PokemonModel {
     @ColumnInfo(name = "name")
     private String name = "";
 
+    private String activityId;
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(String activityId) {
+        this.activityId = activityId;
     }
 }

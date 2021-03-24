@@ -15,7 +15,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 
 import br.com.andrepbap.estudoarquiteturaandroid.R;
-import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListActivityWithPokemons;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModel;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModelFactory;
@@ -34,13 +34,24 @@ public class PokemonListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this));
+        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this, PokemonListActivity.class.getSimpleName()));
         ViewModelProvider viewModelProvider = new ViewModelProvider(this, pokemonListViewModelFactory);
         pokemonListViewModel = viewModelProvider.get(PokemonListViewModel.class);
 
         setupRecyclerView();
         setupGoToTopButton();
         observePokemonList();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+        if(layoutManager instanceof GridLayoutManager){
+            int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
+            pokemonListViewModel.updateListPositionStateWith(firstVisibleItemPosition);
+        }
     }
 
     private void setupRecyclerView() {
@@ -51,7 +62,6 @@ public class PokemonListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
 
-        addSaveListPositionHandler();
         addScrollToTopButtonVisibilityHandler();
         addPaginationHandler();
     }
@@ -84,24 +94,6 @@ public class PokemonListActivity extends AppCompatActivity {
         });
     }
 
-    private void addSaveListPositionHandler() {
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
-
-                    if(layoutManager instanceof GridLayoutManager){
-                        int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
-                        pokemonListViewModel.updateListPositionStateWith(firstVisibleItemPosition);
-                    }
-                }
-            }
-        });
-    }
-
     private void setupGoToTopButton() {
         goToTopActionButton = findViewById(R.id.go_to_top_floating_action_button);
         goToTopActionButton.setVisibility(View.GONE);
@@ -110,10 +102,10 @@ public class PokemonListActivity extends AppCompatActivity {
 
     private void observePokemonList() {
         pokemonListViewModel.getPokemonList().observe(this, resource -> {
-            PokemonListState data = resource.data;
+            PokemonListActivityWithPokemons data = resource.data;
             if (data != null) {
-                adapter.update(data.getPokemonListModel().getResults());
-                recoverListPositionStateWith(data.getLastSeemPosition());
+                adapter.update(data.getResults());
+                recoverListPositionStateWith(data.getPokemonListActivityModel().getLastSeemListPosition());
             }
 
             if (resource.error != null) {
@@ -128,6 +120,7 @@ public class PokemonListActivity extends AppCompatActivity {
         if (layoutManager != null) {
             int count = layoutManager.getItemCount();
             if(position != RecyclerView.NO_POSITION && position < count){
+                //TODO fix
                 layoutManager.scrollToPosition(position);
             }
         }
