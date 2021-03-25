@@ -16,6 +16,8 @@ public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
 
     public abstract PokemonListActivityWithPokemonsDAO pokemonListActivityWithPokemonsDAO();
+    public abstract PokemonDAO pokemonDAO();
+    public abstract PokemonListActivityDAO pokemonListActivityDAO();
 
     public static AppDatabase getInstance(Context context) {
         if (instance == null) {

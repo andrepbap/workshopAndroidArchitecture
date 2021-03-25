@@ -6,21 +6,28 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.util.List;
+
 import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
 import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
+import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
+import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonListActivityDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonListActivityWithPokemonsDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListActivityModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListActivityWithPokemons;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListAPIModel;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
     public static final String GET_ALL_URL = "https://pokeapi.co/api/v2/pokemon";
 
     private final PokemonListActivityWithPokemonsDAO pokemonListActivityWithPokemonsDAO;
+    private final PokemonDAO pokemonDAO;
+    private final PokemonListActivityDAO pokemonListActivityModelDAO;
     private final WebClient<PokemonListAPIModel> webClient;
 
-    private MediatorLiveData<Resource<PokemonListActivityWithPokemons>> mediator;
+    private MediatorLiveData<Resource<List<PokemonModel>>> mediator;
     private final MutableLiveData<Resource<PokemonListActivityWithPokemons>> webClientLiveData = new MutableLiveData<>();
 
     private final String activityId;
@@ -29,13 +36,19 @@ public class PokemonRepository {
         AppDatabase appDatabase = AppDatabase.getInstance(context);
         webClient = new WebClient<>();
         pokemonListActivityWithPokemonsDAO = appDatabase.pokemonListActivityWithPokemonsDAO();
+        pokemonDAO = appDatabase.pokemonDAO();
+        pokemonListActivityModelDAO = appDatabase.pokemonListActivityDAO();
         this.activityId = activityId;
 
         setupPokemonListMediator();
     }
 
-    public LiveData<Resource<PokemonListActivityWithPokemons>> getPokemonList() {
+    public LiveData<Resource<List<PokemonModel>>> getPokemonList() {
         return mediator;
+    }
+
+    public LiveData<PokemonListActivityModel> getPokemonListActivityState() {
+        return pokemonListActivityModelDAO.getActivity(activityId);
     }
 
     public void paginate() {
@@ -83,8 +96,8 @@ public class PokemonRepository {
     private void setupPokemonListMediator() {
         mediator = new MediatorLiveData<>();
 
-        mediator.addSource(getFromLocalDatabase(), pokemonListActivityWithPokemons -> {
-            mediator.postValue(new Resource<>(pokemonListActivityWithPokemons));
+        mediator.addSource(getFromLocalDatabase(), pokemonList -> {
+            mediator.postValue(new Resource<>(pokemonList));
         });
 
         mediator.addSource(webClientLiveData, resource -> {
@@ -96,8 +109,8 @@ public class PokemonRepository {
         getFromWebClient(GET_ALL_URL);
     }
 
-    private LiveData<PokemonListActivityWithPokemons> getFromLocalDatabase() {
-          return pokemonListActivityWithPokemonsDAO.getPokemonListActivityModel();
+    private LiveData<List<PokemonModel>> getFromLocalDatabase() {
+          return pokemonDAO.getAllByActivity(activityId);
     }
 
     private void getFromWebClient(String path) {

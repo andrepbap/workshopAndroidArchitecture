@@ -13,9 +13,10 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import br.com.andrepbap.estudoarquiteturaandroid.R;
-import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListActivityWithPokemons;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModel;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModelFactory;
@@ -41,17 +42,7 @@ public class PokemonListActivity extends AppCompatActivity {
         setupRecyclerView();
         setupGoToTopButton();
         observePokemonList();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
-
-        if(layoutManager instanceof GridLayoutManager){
-            int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
-            pokemonListViewModel.updateListPositionStateWith(firstVisibleItemPosition);
-        }
+        observeListPosition();
     }
 
     private void setupRecyclerView() {
@@ -62,8 +53,27 @@ public class PokemonListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
 
+        addListPositionHandler();
         addScrollToTopButtonVisibilityHandler();
         addPaginationHandler();
+    }
+
+    private void addListPositionHandler() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+                    if(layoutManager instanceof GridLayoutManager){
+                        int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
+                        pokemonListViewModel.setCurrentListPosition(firstVisibleItemPosition);
+                    }
+                }
+            }
+        });
     }
 
     private void addPaginationHandler() {
@@ -102,10 +112,9 @@ public class PokemonListActivity extends AppCompatActivity {
 
     private void observePokemonList() {
         pokemonListViewModel.getPokemonList().observe(this, resource -> {
-            PokemonListActivityWithPokemons data = resource.data;
-            if (data != null) {
-                adapter.update(data.getResults());
-                recoverListPositionStateWith(data.getPokemonListActivityModel().getLastSeemListPosition());
+            List<PokemonModel> pokemonModelList = resource.data;
+            if (pokemonModelList != null) {
+                adapter.update(pokemonModelList);
             }
 
             if (resource.error != null) {
@@ -114,15 +123,20 @@ public class PokemonListActivity extends AppCompatActivity {
         });
     }
 
-    private void recoverListPositionStateWith(int position) {
-        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+    private void observeListPosition() {
+        pokemonListViewModel.getPokemonListActivityState().observe(this, pokemonListActivityModel -> {
 
-        if (layoutManager != null) {
-            int count = layoutManager.getItemCount();
-            if(position != RecyclerView.NO_POSITION && position < count){
-                //TODO fix
-                layoutManager.scrollToPosition(position);
+            RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+            if (pokemonListActivityModel != null && layoutManager != null) {
+                int position = pokemonListActivityModel.getLastSeemListPosition();
+                int count = layoutManager.getItemCount();
+
+                if(position != RecyclerView.NO_POSITION && position < count){
+                    layoutManager.scrollToPosition(position);
+                    pokemonListViewModel.updateListPosition(-1);
+                }
             }
-        }
+        });
     }
 }

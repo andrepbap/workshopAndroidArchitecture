@@ -13,7 +13,7 @@ public class PokemonListActivityModel {
 
     private String nextPage;
 
-    private int lastSeemListPosition;
+    private int lastSeemListPosition = -1;
 
     public PokemonListActivityModel(@NonNull String uid, String nextPage) {
         this.uid = uid;
@@ -43,4 +43,5 @@ public class PokemonListActivityModel {
     public void setLastSeemListPosition(int lastSeemListPosition) {
         this.lastSeemListPosition = lastSeemListPosition;
     }
+
 }
