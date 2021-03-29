@@ -1,6 +1,8 @@
 package br.com.andrepbap.estudoarquiteturaandroid.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
@@ -18,11 +20,14 @@ public class PokemonListActivity extends AppCompatActivity {
 
     private RecyclerAdapter adapter;
     private final Handler handler = new Handler();
+    private PokemonListViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PokemonListViewModelFactory factory = new PokemonListViewModelFactory(new PokemonRepository(this));
+        viewModel = new ViewModelProvider(this,factory).get(PokemonListViewModel.class);
         setupRecyclerView();
         getModel();
     }
@@ -35,16 +40,6 @@ public class PokemonListActivity extends AppCompatActivity {
     }
 
     private void getModel() {
-        new PokemonRepository(this).getPokemonList(new BaseCallback<PokemonListModel>() {
-            @Override
-            public void success(PokemonListModel pokemonListModel) {
-                handler.post((Runnable) () -> adapter.update(pokemonListModel.getResults()));
-            }
-
-            @Override
-            public void error(String error) {
-                Toast.makeText(PokemonListActivity.this, error, Toast.LENGTH_LONG).show();
-            }
-        });
+        viewModel.getPokemonList().observe(this, pokemonListModel -> adapter.update(pokemonListModel.getResults()));
     }
 }
