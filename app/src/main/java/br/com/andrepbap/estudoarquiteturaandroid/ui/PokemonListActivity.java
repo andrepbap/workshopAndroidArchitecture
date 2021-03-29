@@ -13,9 +13,10 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import br.com.andrepbap.estudoarquiteturaandroid.R;
-import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModel;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModelFactory;
@@ -34,13 +35,14 @@ public class PokemonListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this));
+        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this, PokemonListActivity.class.getSimpleName()));
         ViewModelProvider viewModelProvider = new ViewModelProvider(this, pokemonListViewModelFactory);
         pokemonListViewModel = viewModelProvider.get(PokemonListViewModel.class);
 
         setupRecyclerView();
         setupGoToTopButton();
         observePokemonList();
+        observeListPosition();
     }
 
     private void setupRecyclerView() {
@@ -51,9 +53,27 @@ public class PokemonListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
 
-        addSaveListPositionHandler();
+        addListPositionHandler();
         addScrollToTopButtonVisibilityHandler();
         addPaginationHandler();
+    }
+
+    private void addListPositionHandler() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+                    if(layoutManager instanceof GridLayoutManager){
+                        int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
+                        pokemonListViewModel.setCurrentListPosition(firstVisibleItemPosition);
+                    }
+                }
+            }
+        });
     }
 
     private void addPaginationHandler() {
@@ -84,24 +104,6 @@ public class PokemonListActivity extends AppCompatActivity {
         });
     }
 
-    private void addSaveListPositionHandler() {
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
-
-                    if(layoutManager instanceof GridLayoutManager){
-                        int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
-                        pokemonListViewModel.updateListPositionStateWith(firstVisibleItemPosition);
-                    }
-                }
-            }
-        });
-    }
-
     private void setupGoToTopButton() {
         goToTopActionButton = findViewById(R.id.go_to_top_floating_action_button);
         goToTopActionButton.setVisibility(View.GONE);
@@ -110,10 +112,9 @@ public class PokemonListActivity extends AppCompatActivity {
 
     private void observePokemonList() {
         pokemonListViewModel.getPokemonList().observe(this, resource -> {
-            PokemonListState data = resource.data;
-            if (data != null) {
-                adapter.update(data.getPokemonListModel().getResults());
-                recoverListPositionStateWith(data.getLastSeemPosition());
+            List<PokemonModel> pokemonModelList = resource.data;
+            if (pokemonModelList != null) {
+                adapter.update(pokemonModelList);
             }
 
             if (resource.error != null) {
@@ -122,14 +123,20 @@ public class PokemonListActivity extends AppCompatActivity {
         });
     }
 
-    private void recoverListPositionStateWith(int position) {
-        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+    private void observeListPosition() {
+        pokemonListViewModel.getPokemonListActivityState().observe(this, pokemonListActivityModel -> {
 
-        if (layoutManager != null) {
-            int count = layoutManager.getItemCount();
-            if(position != RecyclerView.NO_POSITION && position < count){
-                layoutManager.scrollToPosition(position);
+            RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+            if (pokemonListActivityModel != null && layoutManager != null) {
+                int position = pokemonListActivityModel.getLastSeemListPosition();
+                int count = layoutManager.getItemCount();
+
+                if(position != RecyclerView.NO_POSITION && position < count){
+                    layoutManager.scrollToPosition(position);
+                    pokemonListViewModel.updateListPosition(-1);
+                }
             }
-        }
+        });
     }
 }
