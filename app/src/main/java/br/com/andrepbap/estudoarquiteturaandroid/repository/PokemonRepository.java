@@ -107,6 +107,9 @@ public class PokemonRepository {
 
     private void updateNextPageLink(PokemonListModel result) {
         String savedNextPageLinkOffset = Uri.parse(pokemonListPreferences.getNextPageLink()).getQueryParameter("offset");
+        if (savedNextPageLinkOffset == null) {
+            savedNextPageLinkOffset = "0";
+        }
         String nextPageLinkOffset = Uri.parse(result.getNextPage()).getQueryParameter("offset");
 
         if (Integer.parseInt(nextPageLinkOffset) > Integer.parseInt(savedNextPageLinkOffset)) {

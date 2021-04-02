@@ -1,17 +1,22 @@
 package br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel;
 
+import android.app.Application;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.Resource;
 
-public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
+public class PokemonListViewModel extends AndroidViewModel {
 
     private final PokemonRepository repository;
 
-    public PokemonListViewModel(PokemonRepository repository) {
-        this.repository = repository;
+    public PokemonListViewModel(@NonNull Application application) {
+        super(application);
+        repository = new PokemonRepository(getApplication());
     }
 
     public LiveData<Resource<PokemonListState>> getPokemonList() {

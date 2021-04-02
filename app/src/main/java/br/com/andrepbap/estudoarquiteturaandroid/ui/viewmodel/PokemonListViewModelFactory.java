@@ -1,22 +1,22 @@
 package br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel;
 
+import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
-
 public class PokemonListViewModelFactory implements ViewModelProvider.Factory {
 
-    private final PokemonRepository repository;
+    private final Application application;
 
-    public PokemonListViewModelFactory(PokemonRepository repository) {
-        this.repository = repository;
+    public PokemonListViewModelFactory(Application application) {
+        this.application = application;
     }
 
     @NonNull
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-        return (T) new PokemonListViewModel(repository);
+        return (T) new PokemonListViewModel(application);
     }
 }
