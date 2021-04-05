@@ -2,13 +2,13 @@ package br.com.andrepbap.estudoarquiteturaandroid.repository;
 
 import android.content.Context;
 
-import java.util.List;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
-import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
-import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
@@ -16,6 +16,7 @@ public class PokemonRepository {
 
     private final PokemonDAO pokemonDAO;
     private final WebClient<PokemonListModel> webClient;
+    private MediatorLiveData<Resource<PokemonListModel>> mediator;
 
     public PokemonRepository(Context context) {
         webClient = new WebClient<>();
@@ -23,34 +24,48 @@ public class PokemonRepository {
                 .pokemonDAO();
     }
 
-    public void getPokemonList(BaseCallback<PokemonListModel> callback) {
-        new BaseAsyncTask<>(new BaseAsyncTask.BaseAsyncTaskDelegate<List<PokemonModel>>() {
-            @Override
-            public List<PokemonModel> onAsyncTaskInBackground() {
-                return pokemonDAO.getAll();
-            }
-
-            @Override
-            public void onAsyncTaskFinish(List<PokemonModel> result) {
-                callback.success(new PokemonListModel(result));
-                getFromWebClient(callback);
-            }
-        }).execute();
+    public LiveData<Resource<PokemonListModel>> getPokemonList() {
+        mediator = new MediatorLiveData<>();
+        setupMediator();
+        return mediator;
     }
 
-    private void getFromWebClient(BaseCallback<PokemonListModel> callback) {
+    private void setupMediator() {
+        mediator.addSource(pokemonDAO.getAll(), pokemonModels -> {
+            PokemonListModel pokemonListModel = new PokemonListModel(pokemonModels);
+
+            Resource<PokemonListModel> pokemonListModelResource = new Resource<>();
+            pokemonListModelResource.setValues(pokemonListModel);
+
+            mediator.postValue(pokemonListModelResource);
+        });
+
+        mediator.addSource(getFromWebClient(), resource -> {
+            if(resource.getError() != null && mediator.getValue() != null) {
+                Resource<PokemonListModel> pokemonListModelResource = new Resource<>();
+                pokemonListModelResource.setError(resource.getError());
+                pokemonListModelResource.setValues(mediator.getValue().getValues());
+                mediator.postValue(pokemonListModelResource);
+            }
+        });
+    }
+
+    private LiveData<Resource<PokemonListModel>> getFromWebClient() {
+        MutableLiveData<Resource<PokemonListModel>> liveData = new MutableLiveData<>();
         webClient.get(GET_ALL_PATH, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
-                callback.success(result);
                 updateLocalDatabase(result);
             }
 
             @Override
             public void error(String error) {
-
+                Resource<PokemonListModel> pokemonListModelResource = new Resource<>();
+                pokemonListModelResource.setError(error);
+                liveData.postValue(pokemonListModelResource);
             }
         });
+        return liveData;
     }
 
     private void updateLocalDatabase(PokemonListModel result) {

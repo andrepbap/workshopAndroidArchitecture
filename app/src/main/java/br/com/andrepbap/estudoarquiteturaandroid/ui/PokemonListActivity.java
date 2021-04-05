@@ -19,7 +19,6 @@ import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 public class PokemonListActivity extends AppCompatActivity {
 
     private RecyclerAdapter adapter;
-    private final Handler handler = new Handler();
     private PokemonListViewModel viewModel;
 
     @Override
@@ -40,6 +39,12 @@ public class PokemonListActivity extends AppCompatActivity {
     }
 
     private void getModel() {
-        viewModel.getPokemonList().observe(this, pokemonListModel -> adapter.update(pokemonListModel.getResults()));
+        viewModel.getPokemonList().observe(this, resource -> {
+            if(resource.getError() != null) {
+                Toast.makeText(this, resource.getError(), Toast.LENGTH_LONG).show();
+            } else {
+                adapter.update(resource.getValues().getResults());
+            }
+        });
     }
 }
