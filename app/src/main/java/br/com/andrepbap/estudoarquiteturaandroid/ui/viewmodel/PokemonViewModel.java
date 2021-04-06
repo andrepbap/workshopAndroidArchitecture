@@ -6,15 +6,16 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonDetailModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.repository.Resource;
 
-public class PokemonListViewModel extends AndroidViewModel {
+public class PokemonViewModel extends AndroidViewModel {
 
     private final PokemonRepository repository;
 
-    public PokemonListViewModel(@NonNull Application application) {
+    public PokemonViewModel(@NonNull Application application) {
         super(application);
         repository = new PokemonRepository(getApplication());
     }
@@ -33,5 +34,9 @@ public class PokemonListViewModel extends AndroidViewModel {
 
     public void updateListPositionStateWith(int position) {
         repository.updateListPositionStateWith(position);
+    }
+
+    public LiveData<Resource<PokemonDetailModel>> getPokemonDetails(String name) {
+        return repository.getPokemonDetailsFromWebClient(name);
     }
 }

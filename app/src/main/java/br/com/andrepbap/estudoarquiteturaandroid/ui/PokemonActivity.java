@@ -7,7 +7,7 @@ import android.os.Bundle;
 import br.com.andrepbap.estudoarquiteturaandroid.R;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.fragment.PokemonListFragment;
 
-public class PokemonListActivity extends AppCompatActivity {
+public class PokemonActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

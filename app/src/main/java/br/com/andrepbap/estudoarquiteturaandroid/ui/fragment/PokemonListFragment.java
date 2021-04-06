@@ -20,14 +20,13 @@ import java.util.ArrayList;
 
 import br.com.andrepbap.estudoarquiteturaandroid.R;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
-import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.RecyclerAdapter;
-import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModel;
+import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonViewModel;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModelFactory;
 
 public class PokemonListFragment extends Fragment {
 
-    private PokemonListViewModel pokemonListViewModel;
+    private PokemonViewModel pokemonViewModel;
 
     private RecyclerAdapter adapter;
     private RecyclerView recyclerView;
@@ -50,7 +49,7 @@ public class PokemonListFragment extends Fragment {
 
         PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(requireActivity().getApplication());
         ViewModelProvider viewModelProvider = new ViewModelProvider(requireActivity(), pokemonListViewModelFactory);
-        pokemonListViewModel = viewModelProvider.get(PokemonListViewModel.class);
+        pokemonViewModel = viewModelProvider.get(PokemonViewModel.class);
 
         setupRecyclerView(view);
         setupGoToTopButton(view);
@@ -77,7 +76,7 @@ public class PokemonListFragment extends Fragment {
             super.onScrollStateChanged(recyclerView, newState);
 
             if (!recyclerView.canScrollVertically(RecyclerView.VERTICAL) && newState == RecyclerView.SCROLL_STATE_IDLE){
-                pokemonListViewModel.paginate();
+                pokemonViewModel.paginate();
             }
             }
         });
@@ -109,7 +108,7 @@ public class PokemonListFragment extends Fragment {
 
                 if(layoutManager instanceof GridLayoutManager){
                     int firstVisibleItemPosition = ((GridLayoutManager) layoutManager).findFirstVisibleItemPosition();
-                    pokemonListViewModel.updateListPositionStateWith(firstVisibleItemPosition);
+                    pokemonViewModel.updateListPositionStateWith(firstVisibleItemPosition);
                 }
             }
             }
@@ -119,11 +118,11 @@ public class PokemonListFragment extends Fragment {
     private void setupGoToTopButton(View view) {
         goToTopActionButton = view.findViewById(R.id.go_to_top_floating_action_button);
         goToTopActionButton.setVisibility(View.GONE);
-        goToTopActionButton.setOnClickListener(v -> pokemonListViewModel.resetList());
+        goToTopActionButton.setOnClickListener(v -> pokemonViewModel.resetList());
     }
 
     private void observePokemonList() {
-        pokemonListViewModel.getPokemonList().observe(this, resource -> {
+        pokemonViewModel.getPokemonList().observe(this, resource -> {
             PokemonListState data = resource.data;
             if (data != null) {
                 adapter.update(data.getPokemonListModel().getResults());

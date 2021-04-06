@@ -17,6 +17,6 @@ public class PokemonListViewModelFactory implements ViewModelProvider.Factory {
     @NonNull
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-        return (T) new PokemonListViewModel(application);
+        return (T) new PokemonViewModel(application);
     }
 }

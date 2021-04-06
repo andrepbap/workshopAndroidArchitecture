@@ -12,6 +12,7 @@ import java.util.List;
 import br.com.andrepbap.estudoarquiteturaandroid.database.AppDatabase;
 import br.com.andrepbap.estudoarquiteturaandroid.database.BaseAsyncTask;
 import br.com.andrepbap.estudoarquiteturaandroid.database.PokemonDAO;
+import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonDetailModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
@@ -61,6 +62,24 @@ public class PokemonRepository {
                 getFromWebClient(GET_ALL_URL);
             }
         }).execute();
+    }
+
+    public LiveData<Resource<PokemonDetailModel>> getPokemonDetailsFromWebClient(String name) {
+        MutableLiveData<Resource<PokemonDetailModel>> liveData = new MutableLiveData<>();
+
+        new WebClient<PokemonDetailModel>().get(String.format("%s/%s", GET_ALL_URL, name), PokemonDetailModel.class, new BaseCallback<PokemonDetailModel>() {
+            @Override
+            public void success(PokemonDetailModel result) {
+                liveData.postValue(new Resource<>(result, null));
+            }
+
+            @Override
+            public void error(String error) {
+                liveData.postValue(new Resource<>(null, error));
+            }
+        });
+
+        return liveData;
     }
 
     private void setupPokemonListMediator() {
