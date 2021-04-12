@@ -10,7 +10,7 @@ public class PokemonListViewModel extends androidx.lifecycle.ViewModel {
 
     private final PokemonRepository repository;
 
-    public PokemonListViewModel(PokemonRepository repository) {
+    PokemonListViewModel(PokemonRepository repository) {
         this.repository = repository;
     }
 
