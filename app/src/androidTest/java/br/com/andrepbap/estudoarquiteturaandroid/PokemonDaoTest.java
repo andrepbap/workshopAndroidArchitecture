@@ -64,6 +64,17 @@ public class PokemonDaoTest {
     }
 
     @Test
+    public void shouldNotInsertANullName() {
+        PokemonModel model = new PokemonModel();
+        model.setName(null);
+        dao.insertAll(model);
+
+        dao.getAll().observeForever(pokemonModels -> {
+            assertEquals(0, pokemonModels.size());
+        });
+    }
+
+    @Test
     public void shouldRemoveOneRowOfTable() {
         PokemonModel model = new PokemonModel();
         dao.insertAll(model);
@@ -71,5 +82,6 @@ public class PokemonDaoTest {
         int removedRows = dao.nukeTable();
         Assert.assertEquals(1, removedRows);
     }
+
 
 }
