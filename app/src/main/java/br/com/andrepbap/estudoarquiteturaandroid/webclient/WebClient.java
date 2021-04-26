@@ -13,13 +13,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class WebClient<T> {
+public class WebClient<T> implements Client<T> {
     private final OkHttpClient okHttpClient;
 
     public WebClient() {
         okHttpClient = OkHttpClientInstanceProvider.getInstance().getOkHttpClient();
     }
 
+    @Override
     public void get(String url, Class<T> clazz, BaseCallback<T> callback) {
 
         HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();

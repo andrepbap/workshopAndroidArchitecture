@@ -20,7 +20,7 @@ public class PokemonListPreferences {
         nextPageLink = preference.getString(NEXT_PAGE_LINK, "");
     }
 
-    public void setLastSeemPosition(int lastSeemPosition) {
+    public void setLastSeenPosition(int lastSeemPosition) {
         this.lastSeemPosition = lastSeemPosition;
 
         SharedPreferences.Editor editor = preference.edit();

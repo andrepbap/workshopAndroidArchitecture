@@ -16,23 +16,24 @@ import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.preferences.PokemonListPreferences;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.Client;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
     public static final String GET_ALL_URL = "https://pokeapi.co/api/v2/pokemon";
 
     private final PokemonDAO pokemonDAO;
-    private final WebClient<PokemonListModel> webClient;
+    private final Client<PokemonListModel> webClient;
 
     private MediatorLiveData<Resource<PokemonListState>> mediator;
     private final MutableLiveData<Resource<PokemonListModel>> webClientLiveData = new MutableLiveData<>();
     private final PokemonListPreferences pokemonListPreferences;
 
-    public PokemonRepository(Context context) {
-        webClient = new WebClient<>();
+    public PokemonRepository(Context context, Client<PokemonListModel> client, PokemonListPreferences pokemonListPreferences) {
+        this.webClient = client;
         pokemonDAO = AppDatabase.getInstance(context)
                 .pokemonDAO();
-        pokemonListPreferences = new PokemonListPreferences(context);
+        this.pokemonListPreferences = pokemonListPreferences;
 
         setupPokemonListMediator();
     }
@@ -46,7 +47,7 @@ public class PokemonRepository {
     }
 
     public void updateListPositionStateWith(int position) {
-        pokemonListPreferences.setLastSeemPosition(position);
+        pokemonListPreferences.setLastSeenPosition(position);
     }
 
     public void resetList() {
@@ -85,8 +86,7 @@ public class PokemonRepository {
           return pokemonDAO.getAll();
     }
 
-    private void getFromWebClient(String path) {
-
+    void getFromWebClient(String path) {
         webClient.get(path, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
@@ -109,8 +109,10 @@ public class PokemonRepository {
         String savedNextPageLinkOffset = Uri.parse(pokemonListPreferences.getNextPageLink()).getQueryParameter("offset");
         String nextPageLinkOffset = Uri.parse(result.getNextPage()).getQueryParameter("offset");
 
-        if (Integer.parseInt(nextPageLinkOffset) > Integer.parseInt(savedNextPageLinkOffset)) {
+//        if (savedNextPageLinkOffset == null) {
             pokemonListPreferences.setNextPageLink(result.getNextPage());
-        }
+//        } else if (Integer.parseInt(nextPageLinkOffset) > Integer.parseInt(savedNextPageLinkOffset)) {
+//            pokemonListPreferences.setNextPageLink(result.getNextPage());
+//        }
     }
 }
