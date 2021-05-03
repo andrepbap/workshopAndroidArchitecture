@@ -20,7 +20,8 @@ import br.com.andrepbap.estudoarquiteturaandroid.preferences.PokemonListPreferen
 import br.com.andrepbap.estudoarquiteturaandroid.repository.PokemonRepository;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModel;
 import br.com.andrepbap.estudoarquiteturaandroid.ui.viewmodel.PokemonListViewModelFactory;
-import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.PokemonClient;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.RetrofitServiceInstanceProvider;
 
 public class PokemonListActivity extends AppCompatActivity {
 
@@ -36,7 +37,7 @@ public class PokemonListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this, new WebClient<>(), new PokemonListPreferences(this)));
+        PokemonListViewModelFactory pokemonListViewModelFactory = new PokemonListViewModelFactory(new PokemonRepository(this, new PokemonClient<>(RetrofitServiceInstanceProvider.getInstance().getPokemonService()), new PokemonListPreferences(this)));
         ViewModelProvider viewModelProvider = new ViewModelProvider(this, pokemonListViewModelFactory);
         pokemonListViewModel = viewModelProvider.get(PokemonListViewModel.class);
 

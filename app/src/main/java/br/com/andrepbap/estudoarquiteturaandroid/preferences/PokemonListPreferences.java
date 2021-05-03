@@ -6,18 +6,18 @@ import android.content.SharedPreferences;
 public class PokemonListPreferences {
 
     public static final String LAST_SEEM_POSITION = "lastSeemPosition";
-    public static final String NEXT_PAGE_LINK = "nextPageLink";
+    public static final String OFFSET = "offset";
     private static final String PREF_NAME = PokemonListPreferences.class.getSimpleName();
 
     private final SharedPreferences preference;
 
     private int lastSeemPosition;
-    private String nextPageLink;
+    private int offset;
 
     public PokemonListPreferences(Context context) {
         preference = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         lastSeemPosition = preference.getInt(LAST_SEEM_POSITION, 0);
-        nextPageLink = preference.getString(NEXT_PAGE_LINK, "");
+        offset = preference.getInt(OFFSET, 0);
     }
 
     public void setLastSeenPosition(int lastSeemPosition) {
@@ -28,11 +28,11 @@ public class PokemonListPreferences {
         editor.apply();
     }
 
-    public void setNextPageLink(String nextPageLink) {
-        this.nextPageLink = nextPageLink;
+    public void setOffset(int offset) {
+        this.offset = offset;
 
         SharedPreferences.Editor editor = preference.edit();
-        editor.putString(NEXT_PAGE_LINK, nextPageLink);
+        editor.putInt(OFFSET, offset);
         editor.apply();
     }
 
@@ -40,7 +40,7 @@ public class PokemonListPreferences {
         return lastSeemPosition;
     }
 
-    public String getNextPageLink() {
-        return nextPageLink;
+    public int getOffset() {
+        return offset;
     }
 }

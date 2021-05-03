@@ -2,25 +2,28 @@ package br.com.andrepbap.estudoarquiteturaandroid.repository;
 
 import android.content.Context;
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
-
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.concurrent.CountDownLatch;
-
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListModel;
 import br.com.andrepbap.estudoarquiteturaandroid.preferences.PokemonListPreferences;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.Client;
-import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.PokemonClient;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.PokemonService;
+import br.com.andrepbap.estudoarquiteturaandroid.webclient.RetrofitServiceInstanceProvider;
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.mock.BehaviorDelegate;
+import retrofit2.mock.MockRetrofit;
+import retrofit2.mock.NetworkBehavior;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -31,7 +34,10 @@ public class PokemonRepositoryTest {
     @Mock
     private Context context;
 
-    private FakeWebClient fakeWebClient;
+    private PokemonClient<PokemonListModel> client;
+
+    @Mock
+    PokemonService pokemonService;
 
     @Mock
     private PokemonListPreferences pokemonListPreferences;
@@ -50,9 +56,14 @@ public class PokemonRepositoryTest {
             }
         };
 
-        fakeWebClient = new FakeWebClient(baseCallback);
-        fakeWebClient.setSuccess(true);
-        repository = new PokemonRepository(context, fakeWebClient, pokemonListPreferences);
+//        fakeWebClient = new FakeWebClient(baseCallback);
+//        fakeWebClient.setSuccess(true);
+
+
+        Mockito.when(pokemonService.getAll(anyInt(), anyInt())).thenReturn(new MockClient().create());
+        client = new PokemonClient<>(pokemonService);
+
+        repository = new PokemonRepository(context, client, pokemonListPreferences);
     }
 
     @Test
@@ -63,7 +74,22 @@ public class PokemonRepositoryTest {
 
     @Test
     public void shouldDelegateToWebClient() {
-        repository.getFromWebClient("/italossauro");
+        repository.getFromWebClient();
+    }
+}
+
+class MockClient {
+    Call<ResponseBody> create() {
+        NetworkBehavior networkBehavior = NetworkBehavior.create();
+        networkBehavior.setFailurePercent(0);
+
+        MockRetrofit mockRetrofit = new MockRetrofit.Builder(RetrofitServiceInstanceProvider.getInstance().getRetrofit())
+                .networkBehavior(networkBehavior)
+                .build();
+
+        BehaviorDelegate<PokemonService> pokemonServiceBehaviorDelegate = mockRetrofit.create(PokemonService.class);
+
+        return pokemonServiceBehaviorDelegate.returningResponse(ResponseBody.create(MediaType.parse("application/json"), "{}")).getAll(20, 20);
     }
 }
 
@@ -81,7 +107,7 @@ class FakeWebClient implements Client<PokemonListModel> {
     }
 
     @Override
-    public void get(String url, Class<PokemonListModel> clazz, BaseCallback<PokemonListModel> callback) {
+    public void getPokemonList(int offset, Class<PokemonListModel> clazz, BaseCallback<PokemonListModel> callback) {
         if (success) {
             baseCallback.success(null);
         } else {

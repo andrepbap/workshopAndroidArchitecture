@@ -17,11 +17,8 @@ import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonListState;
 import br.com.andrepbap.estudoarquiteturaandroid.model.PokemonModel;
 import br.com.andrepbap.estudoarquiteturaandroid.preferences.PokemonListPreferences;
 import br.com.andrepbap.estudoarquiteturaandroid.webclient.Client;
-import br.com.andrepbap.estudoarquiteturaandroid.webclient.WebClient;
 
 public class PokemonRepository {
-    public static final String GET_ALL_URL = "https://pokeapi.co/api/v2/pokemon";
-
     private final PokemonDAO pokemonDAO;
     private final Client<PokemonListModel> webClient;
 
@@ -43,7 +40,7 @@ public class PokemonRepository {
     }
 
     public void paginate() {
-        getFromWebClient(pokemonListPreferences.getNextPageLink());
+        getFromWebClient(pokemonListPreferences.getOffset());
     }
 
     public void updateListPositionStateWith(int position) {
@@ -59,7 +56,7 @@ public class PokemonRepository {
 
             @Override
             public void onAsyncTaskFinish(Integer result) {
-                getFromWebClient(GET_ALL_URL);
+                getFromWebClient();
             }
         }).execute();
     }
@@ -79,15 +76,19 @@ public class PokemonRepository {
             }
         });
 
-        getFromWebClient(GET_ALL_URL);
+        getFromWebClient();
     }
 
     private LiveData<List<PokemonModel>> getFromLocalDatabase() {
           return pokemonDAO.getAll();
     }
 
-    void getFromWebClient(String path) {
-        webClient.get(path, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
+    void getFromWebClient() {
+        getFromWebClient(0);
+    }
+
+    void getFromWebClient(int offset) {
+        webClient.getPokemonList(offset, PokemonListModel.class, new BaseCallback<PokemonListModel>() {
             @Override
             public void success(PokemonListModel result) {
                 updateLocalDatabase(result);
@@ -106,11 +107,10 @@ public class PokemonRepository {
     }
 
     private void updateNextPageLink(PokemonListModel result) {
-        String savedNextPageLinkOffset = Uri.parse(pokemonListPreferences.getNextPageLink()).getQueryParameter("offset");
-        String nextPageLinkOffset = Uri.parse(result.getNextPage()).getQueryParameter("offset");
+        String offset = Uri.parse(result.getNextPage()).getQueryParameter("offset");
 
 //        if (savedNextPageLinkOffset == null) {
-            pokemonListPreferences.setNextPageLink(result.getNextPage());
+            pokemonListPreferences.setOffset(Integer.parseInt(offset));
 //        } else if (Integer.parseInt(nextPageLinkOffset) > Integer.parseInt(savedNextPageLinkOffset)) {
 //            pokemonListPreferences.setNextPageLink(result.getNextPage());
 //        }
